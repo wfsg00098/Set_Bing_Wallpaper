@@ -13,6 +13,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -22,15 +25,18 @@ public class MainActivity extends Activity {
     String queryUrl = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=ROW";
     String imageUrlBase = "https://www.bing.com";
     String imageQuality = "_UHD.jpg";
+    String data_path;
+    File file;
 
-
-    public void setBingWallpaper(Bitmap bitmap) {
+    public void setBingWallpaper() {
         try {
             //Context context = getApplicationContext();
             WallpaperManager wm = WallpaperManager.getInstance(this);
-            if (bitmap != null) {
-                wm.setBitmap(bitmap, null, false, WallpaperManager.FLAG_LOCK | WallpaperManager.FLAG_SYSTEM);
-            }
+
+            //wm.setBitmap(bitmap, null, false, WallpaperManager.FLAG_LOCK | WallpaperManager.FLAG_SYSTEM);
+            FileInputStream fis = new FileInputStream(file);
+            wm.setStream(fis,null,false,WallpaperManager.FLAG_LOCK | WallpaperManager.FLAG_SYSTEM);
+            runOnUiThread(this::finish);
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -41,10 +47,9 @@ public class MainActivity extends Activity {
     public class getBingWallpaper extends Thread {
         @Override
         public void run() {
-            Bitmap bmp = null;
             try {
                 HttpURLConnection conn = (HttpURLConnection) new URL(queryUrl).openConnection();
-                conn.setConnectTimeout(6000);
+                conn.setConnectTimeout(1000);
                 conn.setDoInput(true);
                 conn.setUseCaches(false);
                 conn.connect();
@@ -58,9 +63,16 @@ public class MainActivity extends Activity {
                 conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
                 InputStream is = conn.getInputStream();
-                bmp = BitmapFactory.decodeStream(is);
+                FileOutputStream fos = new FileOutputStream(file);
+                byte[] temp = new byte[16*1024];
+                int len;
+                while ((len = is.read(temp)) != -1) {
+                    fos.write(temp, 0, len);
+                    fos.flush();
+                }
+                fos.close();
                 is.close();
-                setBingWallpaper(bmp);
+                setBingWallpaper();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -71,7 +83,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setContentView(R.layout.activity_main);
+        data_path = getFilesDir().getAbsolutePath() + "/";
+        file = new File(data_path + "temp.jpg");
         new getBingWallpaper().start();
         finish();
     }
