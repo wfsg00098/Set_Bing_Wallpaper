@@ -24,7 +24,7 @@ import java.net.URL;
 public class MainActivity extends Activity {
     String queryUrl = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=ROW";
     String imageUrlBase = "https://www.bing.com";
-    String imageQuality = "_UHD.jpg";
+    String imageQuality = "_1080x1920.jpg";
     String data_path;
     File file;
 
